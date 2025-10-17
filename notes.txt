@@ -1,0 +1,4 @@
+* Mean Average Precision 95.2%
+* The decay is essential for fine-tuning. A constantly high or increasing learning rate
+  would prevent the model from settling into 
+  the best minimum of the loss function, causing it to overshoot and oscillate.
