@@ -9,12 +9,12 @@ Servo servo5;
 Servo servo6;
 
 // Define the pins for each servo
-const int servoPin1 = 10;
-const int servoPin2 = 9;
-const int servoPin3 = 8;
-const int servoPin4 = 7;
+const int servoPin1 = 2;
+const int servoPin2 = 3;
+const int servoPin3 = 4;
+const int servoPin4 = 5;
 const int servoPin5 = 6;
-const int servoPin6 = 5;
+const int servoPin6 = 7;
 
 void setup() {
   // Attach each servo to its pin
