@@ -1,53 +1,144 @@
 #include <Servo.h>
 
-Servo servo_0; // Declaration of object to control the first servo
-Servo servo_1; // Declaration of object to control the second servo
-Servo servo_2; // Declaration of object to control the third servo
-Servo servo_3; // Declaration of object to control the fourth servo
-Servo servo_4; // Declaration of object to control the fifth servo
-Servo servo_5; // Declaration of object to control the sixth servo
-Servo servo_6; // Declaration of object to control the seventh servo (not used in this project)
+Servo base;      // pin 2
+Servo shoulder;  // pin 3
+Servo elbow;     // pin 4
+Servo gripper;   // pin 5
+
+// current angles
+int baseAngle = 90;
+int shoulderAngle = 90;
+int elbowAngle = 45;
+int gripperAngle = 90;
+
+// speed control
+int speedDelay = 15;
+
+// base positions
+int baseHome = 90;
+int bin1 = 40;
+int bin2 = 70;
+int bin3 = 120;
+int bin4 = 150;
 
 void setup() {
-  Serial.begin(9600); // Initialize serial communication
-  servo_0.attach(2); // Associate servo_0 to pin 2
-  servo_1.attach(3); // Associate servo_1 to pin 3
-  servo_2.attach(4); // Associate servo_2 to pin 4
-  servo_3.attach(5); // Associate servo_3 to pin 5
-  servo_4.attach(6); // Associate servo_4 to pin 6
-  servo_5.attach(7); // Associate servo_5 to pin 7
-  servo_6.attach(8); // Associate servo_6 to pin 8
+
+  Serial.begin(9600);
+
+  base.attach(2);
+  shoulder.attach(3);
+  elbow.attach(4);
+  gripper.attach(5);
+
+  homePosition();
 }
 
 void loop() {
-  if (Serial.available() > 0) { // If there is data available to read
-    String input = Serial.readStringUntil('\n'); // Read the data string until newline
-    int servoIndex = input.substring(0, 1).toInt(); // Get the servo index
-    int servoValue = input.substring(2).toInt(); // Get the servo value
-    
-    switch (servoIndex) {
-      case 1:
-        servo_0.write(servoValue);
-        break;
-      case 2:
-        servo_1.write(servoValue);
-        break;
-      case 3:
-        servo_2.write(servoValue);
-        break;
-      case 4:
-        servo_3.write(servoValue);
-        break;
-      case 5:
-        servo_4.write(servoValue);
-        servo_6.write(180 - servoValue);
-        break;
-      case 6:
-        servo_5.write(servoValue);
-        break;
-      default:
-        // Invalid servo index
-        break;
+
+  if (Serial.available()) {
+
+    int command = Serial.parseInt();
+    Serial.read();
+
+    if(command >= 0 && command <= 4)
+    {
+      executeCycle(command);
     }
   }
+}
+
+
+// ===== MAIN SEQUENCE =====
+void executeCycle(int command)
+{
+  pickObject();
+
+  // Move to bin
+  switch(command)
+  {
+    case 0: moveServoSlow(base, baseAngle, baseHome); break;
+    case 1: moveServoSlow(base, baseAngle, bin1); break;
+    case 2: moveServoSlow(base, baseAngle, bin2); break;
+    case 3: moveServoSlow(base, baseAngle, bin3); break;
+    case 4: moveServoSlow(base, baseAngle, bin4); break;
+  }
+
+  delay(300);
+
+  dropObject();
+
+  delay(300);
+
+  // Reset arm
+  moveServoSlow(shoulder, shoulderAngle, 90);
+  moveServoSlow(elbow, elbowAngle, 45);
+
+  delay(200);
+
+  // Return base to home
+  moveServoSlow(base, baseAngle, baseHome);
+}
+
+
+// ===== Smooth Movement =====
+void moveServoSlow(Servo &servo, int &currentAngle, int targetAngle)
+{
+  if(currentAngle < targetAngle)
+  {
+    for(int pos = currentAngle; pos <= targetAngle; pos++)
+    {
+      servo.write(pos);
+      delay(speedDelay);
+    }
+  }
+  else
+  {
+    for(int pos = currentAngle; pos >= targetAngle; pos--)
+    {
+      servo.write(pos);
+      delay(speedDelay);
+    }
+  }
+  currentAngle = targetAngle;
+}
+
+
+// ===== PICK OBJECT =====
+void pickObject()
+{
+  moveServoSlow(shoulder, shoulderAngle, 135);
+  delay(200);
+
+  moveServoSlow(gripper, gripperAngle, 90);
+  delay(200);
+
+  moveServoSlow(gripper, gripperAngle, 45);
+  delay(150);
+
+  moveServoSlow(shoulder, shoulderAngle, 90);
+  moveServoSlow(elbow, elbowAngle, 45);
+}
+
+
+// ===== DROP OBJECT (UPDATED) =====
+void dropObject()
+{
+  // Shoulder only to 100°
+  moveServoSlow(shoulder, shoulderAngle, 100);
+  delay(200);
+
+  // Elbow stays at 45°
+
+  // Open gripper
+  moveServoSlow(gripper, gripperAngle, 90);
+}
+
+
+// ===== HOME =====
+void homePosition()
+{
+  moveServoSlow(base, baseAngle, baseHome);
+  moveServoSlow(shoulder, shoulderAngle, 90);
+  moveServoSlow(elbow, elbowAngle, 45);
+  moveServoSlow(gripper, gripperAngle, 90);
 }
