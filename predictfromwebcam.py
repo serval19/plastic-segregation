@@ -3,7 +3,7 @@ from ultralytics import YOLO
 
 # 1. Load your trained YOLO11 plastic detection model
 # Replace 'best.pt' with the actual path to your trained weight file
-model = YOLO('./trainresults/weights/best.pt') 
+model = YOLO('./15thapril-model-train-results/weights/best.pt')  # Original weight path is :  ./trainresults/weights/best.pt
 
 # 2. Initialize the webcam - MODIFIED FOR EXTERNAL WEBCAM
 print("📷 Looking for external webcam...")
